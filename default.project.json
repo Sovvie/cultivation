@@ -1,7 +1,7 @@
 {
   "name": "Cultivation",
   "emitLegacyScripts": false,
-  "serveAddress": "0.0.0.0",
+  "serveAddress": "127.0.0.1",
   "servePort": 34872,
   "tree": {
     "$className": "DataModel",
@@ -12,10 +12,10 @@
       "$path": "src/ReplicatedStorage"
     },
     "ServerStorage": {
-      "$path": "src/ServerStorage",
-      "Scripts": {
-        "$path": "scripts"
-      }
+      "$path": "src/ServerStorage"
+      // "Scripts": {
+      //   "$path": "scripts"
+      // }
     },
     "ServerScriptService": {
       "$path": "src/ServerScriptService"
