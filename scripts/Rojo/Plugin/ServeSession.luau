@@ -278,6 +278,9 @@ function ServeSession:start()
 			return self:__initialSync(rootInstanceId)
 				:andThen(function()
 					self:__injectDeployScript()
+					return self:deploy()
+				end)
+				:andThen(function()
 					return self:__mainSyncLoop()
 				end)
 		end)
@@ -543,7 +546,9 @@ function ServeSession:__injectDeployScript()
 	end
 
 	local clone = deployScriptSource:Clone()
+	clone.Enabled = false
 	clone.Parent = ServerScriptService
+	clone.Enabled = true
 
 	Log.info("Injected DeployScript into ServerScriptService")
 end
