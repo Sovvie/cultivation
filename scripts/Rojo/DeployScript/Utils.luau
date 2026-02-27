@@ -8,18 +8,16 @@
 --]]
 
 local ServerStorage = game:GetService('ServerStorage')
-local RunService = game:GetService('RunService')
 
 local Utils = {}
 
 function Utils.getSourceCodebase(): Instance
-	local sourceCodebase = ServerStorage:FindFirstChild('CANON_CODEBASE')
-	if RunService:IsStudio() then
-		local localUserCodebase = ServerStorage:FindFirstChild('LOCAL_USER_CODEBASE')
-		if localUserCodebase and not localUserCodebase:HasTag('IGNORE') then
-			sourceCodebase = localUserCodebase
-		end
+	local localUserCodebase = ServerStorage:FindFirstChild('LOCAL_USER_CODEBASE')
+	if localUserCodebase then
+		return localUserCodebase
 	end
+
+	local sourceCodebase = ServerStorage:FindFirstChild('CANON_CODEBASE')
 	
 	assert(sourceCodebase, `Unable to deploy codebase. No codebase found.`)
 	
