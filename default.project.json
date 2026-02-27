@@ -1,66 +1,41 @@
 {
   "name": "Cultivation",
+  "emitLegacyScripts": false,
+  "serveAddress": "0.0.0.0",
+  "servePort": 34872,
   "tree": {
     "$className": "DataModel",
-
+    "ReplicatedFirst": {
+      "$path": "src/ReplicatedFirst"
+    },
     "ReplicatedStorage": {
-      "$path": "src/shared"
+      "$path": "src/ReplicatedStorage"
     },
-
-    "ServerScriptService": {
-      "$path": "src/server"
-    },
-
-    "StarterPlayer": {
-      "StarterPlayerScripts": {
-        "$path": "src/client"
+    "ServerStorage": {
+      "$path": "src/ServerStorage",
+      "Scripts": {
+        "$path": "scripts"
       }
     },
-
-    "Workspace": {
-      "$properties": {
-        "FilteringEnabled": true
+    "ServerScriptService": {
+      "$path": "src/ServerScriptService"
+    },
+    "StarterPlayer": {
+      "StarterCharacterScripts": {
+        "$path": "src/StarterCharacterScripts"
       },
-      "Baseplate": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Color": [
-            0.38823,
-            0.37254,
-            0.38823
-          ],
-          "Locked": true,
-          "Position": [
-            0,
-            -10,
-            0
-          ],
-          "Size": [
-            512,
-            20,
-            512
-          ]
-        }
+      "StarterPlayerScripts": {
+        "$path": "src/StarterPlayerScripts"
+      }
+    },
+    "Workspace": {
+      "$path": "src/Workspace",
+      "Terrain": {
+        "$className": "Terrain"
       }
     },
     "Lighting": {
-      "$properties": {
-        "Ambient": [
-          0,
-          0,
-          0
-        ],
-        "Brightness": 2,
-        "GlobalShadows": true,
-        "Outlines": false,
-        "Technology": "Voxel"
-      }
-    },
-    "SoundService": {
-      "$properties": {
-        "RespectFilteringEnabled": true
-      }
+      "$path": "src/Lighting"
     }
   }
 }
