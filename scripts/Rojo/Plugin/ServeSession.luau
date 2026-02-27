@@ -278,9 +278,7 @@ function ServeSession:start()
 			return self:__initialSync(rootInstanceId)
 				:andThen(function()
 					self:__injectDeployScript()
-					return self:deploy()
-				end)
-				:andThen(function()
+					self:__cloneStagingToCanon()
 					return self:__mainSyncLoop()
 				end)
 		end)
@@ -551,6 +549,25 @@ function ServeSession:__injectDeployScript()
 	clone.Enabled = true
 
 	Log.info("Injected DeployScript into ServerScriptService")
+end
+
+function ServeSession:__cloneStagingToCanon()
+	if not self.__stagingRoot then
+		Log.warn("No staging root; skipping CANON_CODEBASE creation")
+		return
+	end
+
+	local deployRoot = ensureDeployContainer()
+
+	for _, child in ipairs(deployRoot:GetChildren()) do
+		child:Destroy()
+	end
+
+	for _, child in ipairs(self.__stagingRoot:GetChildren()) do
+		child:Clone().Parent = deployRoot
+	end
+
+	Log.info("Created CANON_CODEBASE from staging ({} top-level children)", #self.__stagingRoot:GetChildren())
 end
 
 function ServeSession:__stopInternal(err)
