@@ -41,6 +41,7 @@ export type Class = { Instance: Player, Butler: Butler.Type } & typeof(PlayerMet
 local function buildClass(player: Player): Class
     local class = {
         Instance = player,
+        Butler = Butler.new()
     }
 
     for key, value in PlayerMethods do
@@ -57,7 +58,10 @@ local function buildClass(player: Player): Class
 end
 
 Players.PlayerRemoving:Connect(function(player)
-    PlayerClasses[player] = nil
+    if PlayerClasses[player] then
+        PlayerClasses[player].Butler:Clean()
+        PlayerClasses[player] = nil
+    end
 end)
 
 return function(from: Player?): Class?
@@ -66,10 +70,5 @@ return function(from: Player?): Class?
         return nil
     end
 
-    local cached: Class = PlayerClasses[player]
-    if cached then
-        return cached
-    end
-
-    return buildClass(player)
+    return PlayerClasses[player] or buildClass(player)
 end

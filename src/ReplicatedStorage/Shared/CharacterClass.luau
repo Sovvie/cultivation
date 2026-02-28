@@ -42,12 +42,7 @@ return function(from: Player?): Class?
         return nil
     end
 
-    local cached: Class = CharacterClasses[player]
-    if cached then
-        return cached
-    end
-
-    return Promise.new(function(resolve, reject)
+    return CharacterClasses[player] or Promise.new(function(resolve, reject)
         local character = player.Character or player.CharacterAdded:Wait()
         if not player:IsDescendantOf(Players) then
             reject("Player left during character wait")

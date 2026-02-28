@@ -25,21 +25,19 @@ Players.PlayerAdded:Connect(function(player: Player)
         callback(class, class.Butler)
     end
 
-    class.Butler:Add(player.CharacterAdded:Connect(function(_: Model)
+    local function emitCharacterAdded()
         local charClass = class:GetCharacter()
         if not charClass then return end
 
         for _, callback in onCharacterHooks do
             callback(charClass, charClass.Butler)
         end
-    end))
-end)
+    end
 
-Players.PlayerRemoving:Connect(function(player: Player, _: Enum.PlayerExitReason)
-    local class = PlayerClass(player)
-
-    class.Butler:Clean()
-    table.clear(class)
+    class.Butler:Add(player.CharacterAdded:Connect(emitCharacterAdded))
+    if player.Character then
+        emitCharacterAdded()
+    end
 end)
 
 return hooks
