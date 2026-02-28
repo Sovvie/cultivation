@@ -3,8 +3,6 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local StarterPlayer = game:GetService("StarterPlayer")
 
-local func = require(ServerStorage.CANON_CODEBASE.ReplicatedStorage.Shared.Packages.Sift.Util.func)
-
 local Systems = ServerStorage.Systems
 local ClientSystems = Instance.new("Folder")
 ClientSystems.Name = "Systems"
