@@ -1,7 +1,11 @@
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local StarterPlayer = game:GetService("StarterPlayer")
+
+local Thread = require(ReplicatedStorage.Packages.Thread)
 
 local Systems = ServerStorage.Systems
 local ClientSystems = Instance.new("Folder")
@@ -23,18 +27,9 @@ for _, systemFolder in Systems:GetChildren() do
     client.Parent = ClientSystems
 end
 
-local freeRunnerThreads = {}
-local function runInThread(callback, ...)
-    local taskToSpawn = table.remove(freeRunnerThreads, #freeRunnerThreads) or function(fn, ...)
-        fn(...)
-        table.insert(freeRunnerThreads, coroutine.running())
-    end
-
-    task.spawn(taskToSpawn, callback, ...)
-end
 
 for _, module in bootup do
     if module:IsA("ModuleScript") then
-        runInThread(require, module)
+        Thread.spawn(require, module)
     end
 end

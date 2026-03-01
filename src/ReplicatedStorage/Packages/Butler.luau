@@ -133,7 +133,6 @@ function Butler.new(size: number?): Type
 		Clean = clean,
 		FastClean = fastClean,
 		Destroy = destroy,
-		IsDestroyed = isDestroyed,
 	}) :: any
 end
 
