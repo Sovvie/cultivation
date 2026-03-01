@@ -45,7 +45,7 @@ uiAnimTest:Create("End", 5, function(context)
     )
 end)
 
-uiAnimTest:GetReachedSignal("Start"):Connect(function()
+uiAnimTest:GetSignalReached("Start"):Connect(function()
     print("external: Start was reached")
 end)
 
@@ -53,7 +53,7 @@ uiAnimTest.OnComplete:Connect(function()
     print("movie finished")
 end)
 
-uiAnimTest:Play()
 
+uiAnimTest:Play()
 
 return {}
