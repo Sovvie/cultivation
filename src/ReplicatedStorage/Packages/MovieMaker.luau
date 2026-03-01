@@ -1521,6 +1521,7 @@ function MovieMaker.stateful(config)
 				if not ok then
 					warn(("[MovieMaker.stateful] Exit '%s' failed: %s"):format(fromState, tostring(err)))
 				end
+				currentCtx.butler:Clean()
 			end
 		end
 
