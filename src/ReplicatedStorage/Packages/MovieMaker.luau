@@ -1513,14 +1513,14 @@ function MovieMaker.stateful(config)
 		if fromState then
 			local currentDef = self._stateDefs[fromState]
 			local currentCtx = self._contexts[fromState]
+			if currentCtx then
+				currentCtx.butler:Clean()
+			end
 			if currentDef and currentDef.Exit and currentCtx then
 				local ok, err = pcall(currentDef.Exit, currentCtx, self._target, transition)
 				if not ok then
 					warn(("[MovieMaker.stateful] Exit '%s' failed: %s"):format(fromState, tostring(err)))
 				end
-			end
-			if currentCtx then
-				currentCtx.butler:Clean()
 			end
 		end
 
