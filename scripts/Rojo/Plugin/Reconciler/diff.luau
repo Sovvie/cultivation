@@ -80,12 +80,11 @@ local function diff(instanceMap, virtualInstances, rootId)
 						changedProperties[propertyName] = virtualValue
 					end
 				else
-					local propertyType = next(virtualValue)
-					Log.warn(
-						"Failed to decode property {}.{}. Encoded property was: {:#?}",
+					Log.trace(
+						"Skipping undecoded property {}.{} (type: {})",
 						virtualInstance.ClassName,
 						propertyName,
-						virtualValue
+						tostring(next(virtualValue))
 					)
 				end
 			else

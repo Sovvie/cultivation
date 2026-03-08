@@ -1,10 +1,10 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local CharacterClass = require(script.Parent.CharacterClass)
-local Butler = require(ReplicatedStorage.Packages.Butler)
+local CharacterClass = require(script.CharacterClass)
+local PlayerClass = require(script.PlayerClass)
 
-local PlayerClass = require(script.Parent.PlayerClass)
+local Butler = require(ReplicatedStorage.Packages.Butler)
 
 local hooks = {}
 

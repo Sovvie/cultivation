@@ -9,6 +9,8 @@ local Log = require(script.Parent.Parent.Log)
 local Fmt = require(script.Parent.Parent.Fmt)
 local t = require(script.Parent.Parent.t)
 
+local Promise = require(script.Parent.Parent.Promise)
+
 local ChangeBatcher = require(script.Parent.ChangeBatcher)
 local InstanceMap = require(script.Parent.InstanceMap)
 local PatchSet = require(script.Parent.PatchSet)
@@ -463,8 +465,16 @@ function ServeSession:__initialSync(rootInstanceId)
 end
 
 function ServeSession:__mainSyncLoop()
+	if self.__status == Status.Disconnected then
+		return Promise.resolve()
+	end
+
 	return self.__apiContext:retrieveMessages()
 		:andThen(function(messages)
+			if self.__status == Status.Disconnected then
+				return
+			end
+
 			self.__applyingServerPatch = true
 
 			for i, message in ipairs(messages) do
@@ -488,6 +498,11 @@ function ServeSession:__mainSyncLoop()
 				task.defer(function()
 					self:__mainSyncLoop()
 				end)
+			end
+		end)
+		:catch(function(err)
+			if self.__status ~= Status.Disconnected then
+				self:__stopInternal(err)
 			end
 		end)
 end
@@ -571,7 +586,22 @@ function ServeSession:__cloneStagingToCanon()
 end
 
 function ServeSession:__stopInternal(err)
-	self:__setStatus(Status.Disconnected, err)
+	if self.__status == Status.Disconnected then
+		return
+	end
+
+	self.__status = Status.Disconnected
+
+	local callback = self.__statusChangedCallback
+	self.__statusChangedCallback = nil
+
+	if callback ~= nil then
+		local ok, cbErr = pcall(callback, Status.Disconnected, err)
+		if not ok then
+			Log.warn("Status callback error during disconnect: {}", tostring(cbErr))
+		end
+	end
+
 	self.__apiContext:disconnect()
 	self.__instanceMap:stop()
 	self.__changeBatcher:stop()

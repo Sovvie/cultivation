@@ -1456,44 +1456,15 @@ function MovieMaker.parallel(...)
 	return wrapper
 end
 
-function MovieMaker.stateful(config)
-	assert(type(config) == "table", "[MovieMaker.stateful] config must be a table.")
-
-	local target = config.Target
-	local initialState = config.Initial
-	local poolContexts = config.Pool == true
-
-	local reservedKeys = { Target = true, Initial = true, Pool = true }
+function MovieMaker.stateful()
 	local stateDefs = {}
-	for key, value in config do
-		if not reservedKeys[key] then
-			if type(value) == "function" then
-				stateDefs[key] = { Enter = value }
-			elseif type(value) == "table" then
-				stateDefs[key] = value
-			end
-		end
-	end
-
-	assert(next(stateDefs), "[MovieMaker.stateful] At least one state must be defined.")
-	if initialState then
-		assert(stateDefs[initialState], ("[MovieMaker.stateful] Initial state '%s' not found."):format(initialState))
-	end
-
 	local contexts = {}
-	if poolContexts then
-		for name in stateDefs do
-			contexts[name] = createContext()
-		end
-	end
-
 	local rootButler = Butler.new()
 
 	local sm = {
 		_stateDefs = stateDefs,
 		_contexts = contexts,
-		_poolContexts = poolContexts,
-		_target = target,
+		_target = nil,
 		_currentState = nil :: string?,
 		_previousState = nil :: string?,
 		_destroyed = false,
@@ -1501,41 +1472,70 @@ function MovieMaker.stateful(config)
 		OnTransition = Signal.new(),
 	}
 
+	local function getContexts(stateName)
+		local context = contexts[stateName]
+		if not context then
+			context = { enter = createContext(), exit = createContext() }
+			contexts[stateName] = context
+		end
+		return context
+	end
+
+	function sm:State(name: string)
+		assert(type(name) == "string" and name ~= "", "[MovieMaker.stateful] State name must be a non-empty string.")
+		assert(not stateDefs[name], ("[MovieMaker.stateful] Duplicate state '%s'."):format(name))
+
+		local def = { Enter = nil, Exit = nil }
+		stateDefs[name] = def
+
+		local descriptor = {}
+
+		function descriptor:Enter(fn)
+			assert(type(fn) == "function", "[MovieMaker.stateful] Enter must be a function.")
+			def.Enter = fn
+			return self
+		end
+
+		function descriptor:Exit(fn)
+			assert(type(fn) == "function", "[MovieMaker.stateful] Exit must be a function.")
+			def.Exit = fn
+			return self
+		end
+
+		return descriptor
+	end
+
 	function sm:TransitionTo(stateName: string)
 		if self._destroyed then return self end
 
-		local def = self._stateDefs[stateName]
-		assert(def, ("[MovieMaker.stateful] State '%s' not found."):format(stateName))
+		assert(stateDefs[stateName], ("[MovieMaker.stateful] State '%s' not found."):format(stateName))
 
 		local fromState = self._currentState
 		local transition = { from = fromState, to = stateName }
 
 		if fromState then
-			local currentDef = self._stateDefs[fromState]
-			local currentCtx = self._contexts[fromState]
-			if currentCtx then
-				currentCtx.butler:Clean()
-			end
-			if currentDef and currentDef.Exit and currentCtx then
-				local ok, err = pcall(currentDef.Exit, currentCtx, self._target, transition)
+			local oldDef = stateDefs[fromState]
+			local oldcontext = getContexts(fromState)
+
+			oldcontext.enter.butler:Clean()
+
+			if oldDef.Exit then
+				local ok, err = pcall(oldDef.Exit, oldcontext.exit, self._target, transition)
 				if not ok then
 					warn(("[MovieMaker.stateful] Exit '%s' failed: %s"):format(fromState, tostring(err)))
 				end
-				currentCtx.butler:Clean()
 			end
 		end
 
-		local ctx = self._contexts[stateName]
-		if not ctx then
-			ctx = createContext()
-			self._contexts[stateName] = ctx
-		end
+		local newcontext = getContexts(stateName)
+		newcontext.exit.butler:Clean()
 
 		self._previousState = fromState
 		self._currentState = stateName
 
-		if def.Enter then
-			local ok, err = pcall(def.Enter, ctx, self._target, transition)
+		local newDef = stateDefs[stateName]
+		if newDef.Enter then
+			local ok, err = pcall(newDef.Enter, newcontext.enter, self._target, transition)
 			if not ok then
 				warn(("[MovieMaker.stateful] Enter '%s' failed: %s"):format(stateName, tostring(err)))
 			end
@@ -1554,8 +1554,8 @@ function MovieMaker.stateful(config)
 		return self._previousState
 	end
 
-	function sm:Bind(instance)
-		self._target = instance
+	function sm:Bind(target)
+		self._target = target
 		return self
 	end
 
@@ -1572,16 +1572,13 @@ function MovieMaker.stateful(config)
 		if self._destroyed then return end
 		self._destroyed = true
 
-		for _, ctx in self._contexts do
-			ctx.butler:Clean()
+		for _, context in self._contexts do
+			context.enter.butler:Clean()
+			context.exit.butler:Clean()
 		end
 
 		self.OnTransition:Destroy()
 		self._rootButler:Destroy()
-	end
-
-	if initialState then
-		sm:TransitionTo(initialState)
 	end
 
 	return sm

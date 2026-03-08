@@ -249,6 +249,16 @@ local function applyPatch(instanceMap, patch)
 
 		if update.changedProperties ~= nil then
 			for propertyName, propertyValue in pairs(update.changedProperties) do
+				if next(propertyValue) == "Ref" then
+					table.insert(deferredRefs, {
+						id = update.id,
+						instance = instance,
+						propertyName = propertyName,
+						virtualValue = propertyValue,
+					})
+					continue
+				end
+
 				local ok, decodedValue = decodeValue(propertyValue, instanceMap)
 				if not ok then
 					unappliedUpdate.changedProperties[propertyName] = propertyValue

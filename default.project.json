@@ -12,7 +12,10 @@
       "$path": "src/ReplicatedStorage"
     },
     "ServerStorage": {
-      "$path": "src/ServerStorage"
+      "$path": "src/ServerStorage",
+      "scripts": {
+        "$path": "scripts"
+      }
     },
     "ServerScriptService": {
       "$path": "src/ServerScriptService"

@@ -135,25 +135,27 @@ function App:startSession()
 		elseif status == ServeSession.Status.Disconnected then
 			self.serveSession = nil
 
-			-- Details being present indicates that this
-			-- disconnection was from an error.
 			if details ~= nil then
 				Log.warn("Disconnected from an error: {}", details)
 
 				local errorString = tostring(details)
 
-				self:setState({
-					appStatus = AppStatus.Error,
-					errorMessage = truncateString(errorString, MAX_ERROR_MESSAGE_LENGTH),
-					toolbarIcon = Assets.Images.PluginButtonWarning,
-				})
-				self:addNotification(truncateString(errorString, MAX_NOTIFICATION_LENGTH), 10)
+				pcall(function()
+					self:setState({
+						appStatus = AppStatus.Error,
+						errorMessage = truncateString(errorString, MAX_ERROR_MESSAGE_LENGTH),
+						toolbarIcon = Assets.Images.PluginButtonWarning,
+					})
+					self:addNotification(truncateString(errorString, MAX_NOTIFICATION_LENGTH), 10)
+				end)
 			else
-				self:setState({
-					appStatus = AppStatus.NotConnected,
-					toolbarIcon = Assets.Images.PluginButton,
-				})
-				self:addNotification("Disconnected from session.")
+				pcall(function()
+					self:setState({
+						appStatus = AppStatus.NotConnected,
+						toolbarIcon = Assets.Images.PluginButton,
+					})
+					self:addNotification("Disconnected from session.")
+				end)
 			end
 		end
 	end)

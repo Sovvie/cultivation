@@ -136,6 +136,26 @@ types = {
 		end,
 	},
 
+	OptionalCFrame = {
+		fromPod = function(pod)
+			if pod == nil or pod == "None" or pod == false then
+				return nil
+			end
+			local inner = pod
+			if type(pod) == "table" and pod.Some then
+				inner = pod.Some
+			end
+			return types.CFrame.fromPod(inner)
+		end,
+
+		toPod = function(roblox)
+			if roblox == nil then
+				return "None"
+			end
+			return types.CFrame.toPod(roblox)
+		end,
+	},
+
 	Color3 = {
 		fromPod = unpackDecoder(Color3.new),
 
@@ -187,7 +207,48 @@ types = {
 	},
 
 	Content = {
-		fromPod = identity,
+		fromPod = function(pod)
+			local uri
+			if type(pod) == "string" then
+				uri = pod
+			elseif type(pod) == "table" then
+				uri = pod.uri or pod.Uri or pod.url or pod.Url or ""
+			else
+				uri = tostring(pod)
+			end
+
+			local ok, contentObj = pcall(function()
+				return Content.fromUri(uri)
+			end)
+			if ok then
+				return contentObj
+			end
+			return uri
+		end,
+		toPod = identity,
+	},
+
+	ContentId = {
+		fromPod = function(pod)
+			if type(pod) == "string" then
+				return pod
+			elseif type(pod) == "table" then
+				return pod.uri or pod.Uri or pod.url or pod.Url or ""
+			end
+			return tostring(pod)
+		end,
+		toPod = identity,
+	},
+
+	ContentUri = {
+		fromPod = function(pod)
+			if type(pod) == "string" then
+				return pod
+			elseif type(pod) == "table" then
+				return pod.uri or pod.Uri or pod.url or pod.Url or ""
+			end
+			return tostring(pod)
+		end,
 		toPod = identity,
 	},
 
@@ -201,6 +262,57 @@ types = {
 			else
 				return roblox.Value
 			end
+		end,
+	},
+
+	Font = {
+		fromPod = function(pod)
+			local family = pod.family or "rbxasset://fonts/families/SourceSansPro.json"
+			local weight = Enum.FontWeight.Regular
+			local style = Enum.FontStyle.Normal
+
+			if pod.weight then
+				if type(pod.weight) == "string" then
+					local ok, val = pcall(function()
+						return Enum.FontWeight[pod.weight]
+					end)
+					if ok and val then
+						weight = val
+					end
+				elseif type(pod.weight) == "number" then
+					for _, item in Enum.FontWeight:GetEnumItems() do
+						if item.Value == pod.weight then
+							weight = item
+							break
+						end
+					end
+				elseif typeof(pod.weight) == "EnumItem" then
+					weight = pod.weight
+				end
+			end
+
+			if pod.style then
+				if type(pod.style) == "string" then
+					local ok, val = pcall(function()
+						return Enum.FontStyle[pod.style]
+					end)
+					if ok and val then
+						style = val
+					end
+				elseif typeof(pod.style) == "EnumItem" then
+					style = pod.style
+				end
+			end
+
+			return Font.new(family, weight, style)
+		end,
+
+		toPod = function(roblox)
+			return {
+				family = roblox.Family,
+				weight = roblox.Weight.Name,
+				style = roblox.Style.Name,
+			}
 		end,
 	},
 
@@ -244,6 +356,11 @@ types = {
 	},
 
 	Int64 = {
+		fromPod = identity,
+		toPod = identity,
+	},
+
+	MaterialColors = {
 		fromPod = identity,
 		toPod = identity,
 	},
@@ -384,6 +501,11 @@ types = {
 				types.Vector3int16.toPod(roblox.Max),
 			}
 		end,
+	},
+
+	SecurityCapabilities = {
+		fromPod = identity,
+		toPod = identity,
 	},
 
 	SharedString = {

@@ -359,31 +359,8 @@ function reifyInner(instanceMap, virtualInstances, id, parentInstance, unapplied
 		end)
 end
 
-function applyDeferredRefs(instanceMap, deferredRefs, unappliedPatch)
-	local function markFailed(id, propertyName, virtualValue)
-		-- If there is already an updated entry in the unapplied patch for this
-		-- ref, use the existing one. This could match other parts of the
-		-- instance that failed to be created, or even just other refs that
-		-- failed to apply.
-		--
-		-- This is important for instances like selectable GUI objects, which
-		-- have many similar referent properties.
-		for _, existingUpdate in ipairs(unappliedPatch.updated) do
-			if existingUpdate.id == id then
-				existingUpdate.changedProperties[propertyName] = virtualValue
-				return
-			end
-		end
-
-		-- We didn't find an existing entry that matched, so push a new entry
-		-- into our unapplied patch.
-		table.insert(unappliedPatch.updated, {
-			id = id,
-			changedProperties = {
-				[propertyName] = virtualValue,
-			},
-		})
-	end
+function applyDeferredRefs(instanceMap, deferredRefs, _unappliedPatch)
+	local Log = require(script.Parent.Parent.Parent.Log)
 
 	for _, entry in ipairs(deferredRefs) do
 		local _, refId = next(entry.virtualValue)
@@ -392,15 +369,25 @@ function applyDeferredRefs(instanceMap, deferredRefs, unappliedPatch)
 			continue
 		end
 
+		if refId == "00000000000000000000000000000000" then
+			setProperty(entry.instance, entry.propertyName, nil)
+			continue
+		end
+
 		local targetInstance = instanceMap.fromIds[refId]
 		if targetInstance == nil then
-			markFailed(entry.id, entry.propertyName, entry.virtualValue)
+			Log.trace(
+				"Skipping unresolvable Ref property {}.{} (target ID {} not in instance map)",
+				entry.instance.ClassName, entry.propertyName, tostring(refId)
+			)
 			continue
 		end
 
 		local ok = setProperty(entry.instance, entry.propertyName, targetInstance)
 		if not ok then
-			markFailed(entry.id, entry.propertyName, entry.virtualValue)
+			Log.trace(
+				"Failed to write Ref property {}.{}", entry.instance.ClassName, entry.propertyName
+			)
 		end
 	end
 end

@@ -8,11 +8,27 @@ local Error = require(script.Parent.Error)
 
 local ScriptEditorService = game:GetService("ScriptEditorService")
 
+local SKIP_PROPERTIES = {
+	Capabilities = true,
+	NeedsPivotMigration = true,
+	WorldPivotData = true,
+	ModelMeshCFrame = true,
+	ModelMeshSize = true,
+	CameraCFrame = true,
+	CameraFieldOfView = true,
+	Scale = true,
+}
+
 local function writeInstanceProperty(inst: Instance, name: string, value: any)
 	(inst :: any)[name] = value
 end
 
 local function setProperty(instance: Instance, propertyName: string, value: any): (boolean, Error.Error?)
+	if SKIP_PROPERTIES[propertyName] then
+		Log.trace("Silently skipping non-writable property {}.{}", instance.ClassName, propertyName)
+		return true
+	end
+
 	-- Source uses ScriptEditorService:UpdateSourceAsync and never needs a
 	-- descriptor, so handle it before the descriptor lookup.
 	if propertyName == "Source" and instance:IsA("LuaSourceContainer") then
